@@ -1,0 +1,471 @@
+/* ========== 1. GLOBAL & ROOT STYLES ========== */
+/* CSS variables for consistent theming */
+:root {
+    --bg: #f4f6f8;         /* Page background */
+    --card: #fff;          /* Card background */
+    --muted: #666;         /* Muted text */
+    --accent: #00a79d;     /* Accent color */
+    --header-bg: #065751;  /* Header background */
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --dark: #333333;
+    --gray: #dcdcdc;
+}
+
+/* Basic styles for the entire document */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    font-size: 14px;
+}
+
+/* Universal box-sizing for easier layout calculations */
+* {
+    box-sizing: border-box;
+}
+
+/* ============== 2. LAYOUT STYLES ============= */
+
+/* Header section styles */
+header {
+    background: var(--header-bg);
+    color: #fff;
+    display: flex;
+    gap: 8px;
+    padding: 8px 13px;
+    align-items: center;
+}
+
+/* Main content wrapper */
+.wrap {
+    padding: 5px;
+    height: calc(100% - 44px);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Top section containing the main columns */
+.top {
+    display: flex;
+    gap: 5px;
+    align-items: flex-start;
+}
+
+/* Bottom section for summary cards */
+.bottom {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+/* Column layout definitions */
+.wide, .right-col, .tasks-col {
+    flex: none;
+    width: 33%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* ============ 3. COMPONENT STYLES ============ */
+
+/* Base panel style used for most containers */
+.panel {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+
+/* Header navigation buttons */
+header .nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.06);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+header .nav-btn:hover { background: rgba(255,255,255,0.1); }
+header .nav-btn.active { background: rgba(255,255,255,0.06); }
+
+/* Summary cards in the bottom section */
+.summary-card {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    border: 1px solid #e9ecef;
+}
+.summary-card h5 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--dark);
+}
+.summary-card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 5px 0;
+    color: var(--accent);
+}
+.summary-card .meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+}
+.summary-card .meta strong {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+/* ----- PIE CHART COMPONENTS ----- */
+.pie-row {
+    display: flex;
+    gap: 5px;
+    align-items: stretch;
+    height: 200px;
+    position: relative;
+}
+.pie-box {
+    width: 200px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+}
+.pie-box strong {
+    align-self: flex-start;
+    margin-bottom: 6px;
+}
+.pie-box canvas {
+    flex: 1;
+    align-self: center;
+    justify-content: center;
+    width: 90% !important;
+    height: auto !important;
+}
+
+/* ----- LIST & SEARCH COMPONENTS ----- */
+.list-box {
+    position: relative;
+    flex: 1;
+    padding: 5px;
+    border-left: 1px solid #eef3f6;
+    height: 100%;
+    overflow-y: scroll;
+    scrollbar-width: thin;
+}
+.list-box h4, .list-box h5 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: var(--accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 40px);
+}
+.list-box ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.list-box li:hover {
+    background: #f0f4f7;
+    border-radius: 3px;
+}
+.list-search {
+    width: 60%;
+    padding: 4px 0;
+    font-size: 13px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    background: transparent;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+.list-search::placeholder { color: #aaa; }
+.list-search:focus {
+    outline: none;
+    border-bottom: 1px solid var(--accent);
+}
+
+.clear-btn {
+    position: absolute;
+    background: #fff;
+    border: none;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--muted);
+    display: none;
+}
+.clear-btn:hover {
+    color: var(--danger);
+    background-color: transparent;
+}
+
+/* Style for highlighted search text */
+mark {
+    background-color: var(--warning);
+    color: #000;
+    padding: 0 1px;
+    border-radius: 1px;
+}
+
+/* ----- TASK LIST COMPONENTS ----- */
+.addTask-form {
+    width: 100%;
+    display: flex;
+    gap: 5px;
+    margin-bottom: 0px;
+    position: relative;
+}
+.addTask-form input {
+    font-size: 13px;
+    padding: 5px 5px 5px 0;
+    flex-grow: 1;
+    border: none;
+    border-bottom: 1px solid #ccc;
+}
+.addTask-form button {
+    margin-left: 25px;
+    margin-right: 1px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    background-color: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+}
+.addTask-form button:hover {
+    background-color: var(--header-bg);
+}
+
+.clear-btn-task {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent !important;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa !important;
+    display: none;
+    transition: color 0.2s ease;
+}
+.clear-btn-task:hover {
+    color: var(--danger) !important;
+}
+
+#taskListTable {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+/* To make the added list left-aligned */
+/* #taskListTable td:nth-child(2) {
+    text-align: left;
+} */
+#taskListTable thead th:first-child {
+    border-top-left-radius: 8px;
+}
+#taskListTable thead th:last-child {
+    border-top-right-radius: 8px;
+}
+#taskListTable tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 8px;
+}
+#taskListTable tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 8px;
+}
+#taskListTable th, #taskListTable td {
+    padding: 6px;
+    border-bottom: 1px solid #ccc;
+    text-align: center;
+    word-wrap: break-word;
+    white-space: normal;
+}
+#taskListTable th:first-child,
+#taskListTable td:first-child {
+    border-right: 1px solid #ccc;
+    width: 80px;
+}
+#taskListTable th:last-child,
+#taskListTable td:last-child {
+    width: 50px;
+}
+#taskList tr.done td {
+    text-decoration: line-through;
+    color: gray;
+}
+.task-text[contenteditable="true"] {
+    outline: none;
+    border: none;
+    border-bottom: 1px solid var(--accent);
+    background-color: var(--card);
+}
+
+#newTaskInput {
+    flex-grow: 1;
+    min-width: 0;
+    padding-right: 0px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#newTaskInput::placeholder { color: #aaa; }
+#newTaskInput:focus {
+    outline: none;
+    border-bottom: 1px solid var(--accent);
+}
+
+.edit-message {
+    text-align: center;
+    padding: 5px;
+    font-size: 0.9em;
+    color: #888;
+    border: none;
+}
+.edit-message-row td {
+    border: none;
+}
+
+/* Style for the new delete button */
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: color 0.2s ease;
+}
+.delete-btn:hover {
+    color: var(--danger);
+}
+
+/* ========== 4. UTILITY & ZOOM STYLES ========= */
+
+/* Status color utility classes */
+.warn { color: var(--danger); font-weight: 600; }
+.note { color: var(--warning); font-weight: 600; }
+
+/* ----- SCROLLBAR STYLES ----- */
+.scrollable, .list-box {
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+.scrollable::-webkit-scrollbar, .list-box::-webkit-scrollbar {
+    width: 8px;
+}
+.scrollable::-webkit-scrollbar-thumb, .list-box::-webkit-scrollbar-thumb {
+    background-color: var(--gray);
+    border-radius: 4px;
+}
+.scrollable::-webkit-scrollbar-track, .list-box::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scroll-dark::-webkit-scrollbar-thumb { /* Darker thumb on hover/focus */
+    background-color: #888;
+}
+
+/* ----- ZOOM OVERLAY & BUTTON ----- */
+.zoom-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    position: absolute;
+    top: 0px;
+    right: 10px;
+    z-index: 10;
+}
+.zoom-btn:hover {
+    color: var(--danger);
+    background-color: transparent;
+}
+
+#zoom-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.2);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+#zoom-overlay .pie-row {
+    width: 90%;
+    height: 80%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    padding: 10px;
+    display: flex;
+    gap: 5px;
+    overflow: hidden;
+}
+#zoom-overlay .list-box h4,
+#zoom-overlay .list-box h5 {
+    white-space: normal;
+    overflow: visible;
+    max-width: 100%;
+}
+#zoom-overlay strong, #zoom-overlay h4, #zoom-overlay h5,
+#zoom-overlay ul, #zoom-overlay .list-search {
+    font-size: 1.1em;
+}
+#zoom-overlay .pie-box {
+    width: 40%;
+    justify-content: center;
+}
+#zoom-overlay .pie-box canvas {
+    width: 95% !important;
+    height: 95% !important;
+}
+#zoom-overlay .list-box {
+    max-width: 60%;
+}
+#zoom-overlay .zoom-btn {
+    top: 10px;
+    right: 20px;
+}
+
+/* ----- For Changed History ----- */
+#historyList li {
+    white-space: normal;
+    padding-right: 10px;
+    overflow-wrap: break-word;
+}
+
+/* ----- Flash during changes ----- */
+.flash-green {
+    background-color: #c8f7c5;
+    transition: background-color 1s ease;
+}
+.flash-yellow {
+    background-color: #fff8c6;
+    transition: background-color 1s ease;
+}
+.flash-red {
+    background-color: #f7c5c5;
+    transition: background-color 1s ease;
+}
+.flash-gray {
+    background-color: #e0e0e0;
+    transition: background-color 1s ease;
+}
