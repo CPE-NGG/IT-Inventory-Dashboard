@@ -12,7 +12,6 @@ function makeThemedPie(id, labels, data) {
 
     const ctx = document.getElementById(id).getContext('2d');
     
-    // Check for an existing chart and destroy it to prevent conflicts
     const existingChart = Chart.getChart(id);
     if (existingChart) {
         existingChart.destroy();
@@ -69,13 +68,12 @@ function confirmAction(message) {
     return confirm(message);
 }
 
-const FLASH_DURATION = 1000; // 1s, used for both table rows and history
+const FLASH_DURATION = 1000; 
 
 function flashBoth(historyEl, row, cssClass, duration = 1000) {
     if (!historyEl) return;
 
     requestAnimationFrame(() => {
-        // apply flash classes AFTER element is in DOM
         historyEl.classList.add(cssClass);
         if (row) {
             row.querySelectorAll('td').forEach(cell => {
@@ -95,7 +93,6 @@ function flashBoth(historyEl, row, cssClass, duration = 1000) {
 }
 
 // ======== 2. UI INTERACTION HANDLERS ========= //
-/* Toggles a zoomed-in view of a chart and its associated list. */
 function toggleZoom(btn) {
     const overlay = document.getElementById('zoom-overlay');
     if (!overlay) return;
@@ -116,7 +113,6 @@ function toggleZoom(btn) {
         const originalChart = Chart.getChart(originalCanvas);
         
         if (originalChart) {
-            // Re-create the chart in the cloned canvas
             const newChart = new Chart(clonedCanvas.getContext('2d'), originalChart.config);
             newChart.options.plugins.legend.position = 'bottom';
             newChart.options.plugins.legend.align = 'center';
@@ -129,7 +125,6 @@ function toggleZoom(btn) {
     }
 }
 
-/* Filters a list based on user input and highlights matching text. */
 function filterList(input) {
     const filter = input.value.toLowerCase();
     const listBox = input.closest('.list-box');
@@ -138,7 +133,7 @@ function filterList(input) {
 
     items.forEach(item => {
         const text = item.textContent || item.innerText;
-        item.innerHTML = text; // Reset innerHTML before highlighting
+        item.innerHTML = text; 
         if (filter && text.toLowerCase().includes(filter)) {
             const regex = new RegExp(`(${filter})`, 'i');
             item.innerHTML = text.replace(regex, '<mark>$1</mark>');
@@ -149,7 +144,6 @@ function filterList(input) {
     });
 }
 
-/* Clears the search input field and resets the list view. */
 function clearSearch(btn) {
     const input = btn.previousElementSibling;
     input.value = '';
@@ -157,6 +151,60 @@ function clearSearch(btn) {
     filterList(input);
 }
 
+// ======== STORAGE HELPERS ========= //
+function saveTasks() {
+    const tasks = [];
+    document.querySelectorAll('#taskList tr').forEach(row => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const textEl = row.querySelector('.task-text');
+        tasks.push({
+            text: textEl.dataset.originalText,
+            done: checkbox.checked
+        });
+    });
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+function loadTasks() {
+    const saved = localStorage.getItem('tasks');
+    if (!saved) return;
+
+    const taskList = document.getElementById('taskList');
+    JSON.parse(saved).forEach(task => {
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><input type="checkbox" ${task.done ? "checked" : ""}></td>
+            <td><span class="task-text" contenteditable="false" data-original-text="${task.text}">${task.text}</span></td>
+            <td><button class="delete-btn">✖</button></td>
+        `;
+        taskList.appendChild(newRow);
+        attachCheckboxListener(newRow.querySelector('input[type="checkbox"]'));
+        if (task.done) newRow.classList.add("done");
+    });
+}
+
+function saveHistory() {
+    const entries = [];
+    document.querySelectorAll('#historyList li').forEach(li => {
+        entries.push(li.innerHTML);
+    });
+    const limited = entries.slice(0, 20); // keep only last 20
+    localStorage.setItem('history', JSON.stringify(limited));
+}
+
+function loadHistory() {
+    const saved = localStorage.getItem('history');
+    if (!saved) return;
+
+    const historyList = document.getElementById('historyList');
+    JSON.parse(saved).forEach(html => {
+        const li = document.createElement('li');
+        li.innerHTML = html;
+        historyList.appendChild(li);
+    });
+}
+
+// ======== LOGGING ========= //
 function logAction(action, taskText, row = null) {
     const logConfig = {
         'Added':         { icon: '🟢', flash: 'flash-green' },
@@ -167,7 +215,6 @@ function logAction(action, taskText, row = null) {
     };
 
     const config = logConfig[action] || { icon: '', flash: '' };
-    
     const historyList = document.getElementById('historyList');
     const newEntry = document.createElement('li');
     const timestamp = new Date().toLocaleString('en-US', {
@@ -175,16 +222,21 @@ function logAction(action, taskText, row = null) {
         minute: '2-digit',
         second: '2-digit'
     });
-    
+
     newEntry.innerHTML =
         `${config.icon} ${action} "${taskText}" — <span style="color:#888; font-size:12px;">(${timestamp})</span>`;
-    
+
     historyList.prepend(newEntry);
     flashBoth(newEntry, row, config.flash, 1000);
+
+    while (historyList.children.length > 20) {
+        historyList.removeChild(historyList.lastChild);
+    }
+
+    saveHistory();
 }
 
 // ========== 3. TASK LIST FUNCTIONS =========== //
-/* Adds a new task to the task list table from the input field. */
 function addTask() {
     const input = document.getElementById('newTaskInput');
     const taskText = input.value.trim();
@@ -205,12 +257,12 @@ function addTask() {
     attachCheckboxListener(newRow.querySelector('input[type="checkbox"]'));
 
     logAction('Added', taskText, newRow);
+    saveTasks();
 
     input.value = '';
     document.querySelector('.clear-btn-task').style.display = 'none';
 }
 
-/* Clears the text from the 'Enter new task' input field and hides the clear button. */
 function clearTaskInput() {
     const input = document.getElementById('newTaskInput');
     input.value = '';
@@ -218,7 +270,6 @@ function clearTaskInput() {
     document.querySelector('.clear-btn-task').style.display = 'none';
 }
 
-/* Manages task editing with a dynamic message. */
 function saveTaskEdit(element) {
     const taskRow = element.closest('tr');
 
@@ -251,6 +302,7 @@ function saveTaskEdit(element) {
             } else if (newText !== originalText) {
                 logAction('Task changed', `${originalText}" to "${newText}`, taskRow);
                 element.dataset.originalText = newText;
+                saveTasks();
             }
 
             cleanup();
@@ -262,7 +314,6 @@ function saveTaskEdit(element) {
         const originalText = element.dataset.originalText;
 
         if (newText !== originalText) {
-            // Revert changes silently on cancel
             element.textContent = originalText;
         }
         cleanup();
@@ -281,7 +332,6 @@ function saveTaskEdit(element) {
     element.addEventListener('blur', handleBlur);
 }
 
-/* Attaches a change event listener to a task checkbox to toggle the 'done' class. */
 function attachCheckboxListener(checkbox) {
     checkbox.addEventListener('change', function() {
         const row = this.closest('tr');
@@ -293,10 +343,10 @@ function attachCheckboxListener(checkbox) {
             row.classList.remove('done');
             logAction('Unchecked', taskText, row);
         }
+        saveTasks();
     });
 }
 
-/* Deletes a task row from the list after confirmation. */
 function deleteTask(event) {
     event.preventDefault();
     const row = event.target.closest('tr');
@@ -305,11 +355,13 @@ function deleteTask(event) {
     const taskText = row.children[1].textContent;
     if (confirmAction(`Are you sure you want to delete "${taskText}"?`)) {
         logAction('Deleted', taskText, row);
-        setTimeout(() => row.remove(), 1000);
+        setTimeout(() => {
+            row.remove();
+            saveTasks();
+        }, 1000);
     }
 }
 
-/* Adds a new entry to the change history list. */
 function addHistoryEntry(message, flashClass = '') {
     const historyList = document.getElementById('historyList');
     const newEntry = document.createElement('li');
@@ -324,18 +376,22 @@ function addHistoryEntry(message, flashClass = '') {
         newEntry.classList.add(flashClass);
         setTimeout(() => newEntry.classList.remove(flashClass), FLASH_DURATION);
     }
+
+    while (historyList.children.length > 20) {
+        historyList.removeChild(historyList.lastChild);
+    }
+
+    saveHistory();
 }
 
 // ==== 4. INITIALIZATION & EVENT LISTENERS ==== //
 document.addEventListener('DOMContentLoaded', () => {
-    // Apply a dark scrollbar style to list boxes if they are scrollable
     document.querySelectorAll('.list-box').forEach(box => {
         if (box.scrollHeight > box.clientHeight) {
             box.classList.add('scroll-dark');
         }
     });
     
-    // Data for the pie charts
     const chartData = [
         ['sgcDeployed', ['Deployed','Not Deployed'], [900,100]],
         ['sgcStatus', ['Online','Offline'], [850,50]],
@@ -343,10 +399,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ['defenderStatus', ['Updated','Outdated'], [900,20]]
     ];
     
-    // Create all pie charts on page load
     chartData.forEach(args => makeThemedPie(...args));
+
+    loadTasks();
+    loadHistory();
     
-    // Event listener for adding tasks with the Enter key
     document.getElementById('newTaskInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -354,28 +411,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Event delegation for editing tasks
     document.getElementById('taskList').addEventListener('click', function(event) {
-    const target = event.target;
-    
-    // Add this new check for the delete button
-    if (target.classList.contains('delete-btn')) {
-        deleteTask(event);
-        return;
-    }
-
-    if (target.classList.contains('task-text')) {
-        const taskRow = target.closest('tr');
-        if (taskRow && taskRow.classList.contains('done')) {
-            alert("Action cannot be made. The task is already marked as done.");
+        const target = event.target;
+        if (target.classList.contains('delete-btn')) {
+            deleteTask(event);
             return;
         }
-        target.focus();
-        saveTaskEdit(target);
-    }
-});
+
+        if (target.classList.contains('task-text')) {
+            const taskRow = target.closest('tr');
+            if (taskRow && taskRow.classList.contains('done')) {
+                alert("Action cannot be made. The task is already marked as done.");
+                return;
+            }
+            target.focus();
+            saveTaskEdit(target);
+        }
+    });
     
-    // Global listener to show/hide the 'clear search' button
     document.addEventListener('input', function(e) {
         if (e.target.classList.contains('list-search')) {
             const clearBtn = e.target.nextElementSibling;
@@ -387,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Global listener to close the zoom overlay with the Escape key
     document.addEventListener('keydown', e => {
         if (e.key === "Escape") {
             document.getElementById('zoom-overlay').style.display = 'none';
